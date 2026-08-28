@@ -32,4 +32,4 @@ Status values: `implemented`, `blocked`, `deferred`, or `not applicable`.
 | Sidebar route and four live routes | implemented | Automated route/sidebar inspection passed and representative screenshots were reviewed manually |
 | Forms, CTAs, service calls, and equipment controls | not applicable | Monitoring-only dashboard intentionally contains none |
 | Public noindex/canonical/robots | not applicable | Authenticated private Home Assistant panel, not a public website |
-| Commit and push | blocked | Worker was explicitly prohibited from Git mutations; driver owns ship workflow |
+| Commit and push | implemented | Root implementation commit `8823346` pushed to `origin/main`; final `git status -sb` verification is part of the ship handoff |
