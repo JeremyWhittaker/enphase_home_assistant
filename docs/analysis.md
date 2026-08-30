@@ -1,6 +1,6 @@
 # Enphase 2103 and Home Assistant analysis
 
-Audit date: 2026-08-28 (America/Phoenix)
+Data audit: 2026-08-28; dashboard UX refinement: 2026-08-30 (America/Phoenix)
 
 ## Selected system and integrations
 
@@ -32,22 +32,22 @@ The site inventory reports 14 IQ microinverters across two arrays:
 
 At audit time the aggregate active count was 14 and connectivity state was `Online`, but connectivity attributes reported 13 normal and one error. Pool shade inverter `482237045136` had status text `Microinverter Not Reporting`, no last report, and local power of 0 while the other 13 local sensors produced roughly 266–276 W.
 
-The dashboard therefore does not equate aggregate `Online` with healthy. Both dynamic digests read `status_counts` from the connectivity entity and loop the device records from the reporting entity. The affected array and inverter are listed whenever either source indicates a problem. Per-inverter lists are sorted by array and serial, with cloud lifetime sensors paired to local power sensors by serial rather than runtime entity name.
+The dashboard therefore does not equate aggregate `Online` with healthy. Its three dynamic health summaries read `status_counts` from the connectivity entity and loop the device records from the reporting entity. Overview and Arrays show only the affected array and human-readable condition; Diagnostics adds the exact serial. Live inverter rows are grouped by the real array name and omit state-change timestamps, while cloud lifetime sensors remain paired to local power sensors by serial rather than runtime entity name.
 
 ## Optional capability handling
 
 Cloud consumption, grid import/export, battery charge/discharge, and EVSE lifetime entities were registered but unavailable for this site. They are excluded during discovery instead of creating empty cards. Consumption, grid, battery, weather, gateway detail, storage, and diagnostic sections are assembled only from available enabled entities.
 
-Unknown aggregate gateway/microinverter values can remain visible as health evidence while the integration warms up. A `Degraded` cloud service state is not headlined as a site outage because the audit showed it could result from unsupported/disabled optional meters while core solar data remained healthy. The digest describes that distinction and separately shows cloud reachability.
+Unknown aggregate gateway/microinverter values can remain visible as diagnostic evidence while the integration warms up. A `Degraded` cloud service state is not headlined as a site outage because the audit showed it could result from unsupported/disabled optional meters while core solar data remained healthy. That distinction and cloud reachability are confined to Diagnostics.
 
 ## Information architecture
 
-1. **Overview:** What is happening now, and is any inverter reporting a problem?
-2. **Energy:** How much solar energy changed over complete Recorder periods?
-3. **Microinverters:** Which panel units are producing, and what does inventory say about each?
-4. **System:** Are the local gateway, cloud reader, and optional equipment healthy?
+1. **Overview:** What is happening now, what was generated today, and is there one actionable array issue?
+2. **Energy:** How much was generated today and over recent complete Recorder periods?
+3. **Arrays:** Which real array and inverter are producing now?
+4. **Diagnostics:** What are the exact fault, source, freshness, gateway, inventory, and lifetime-counter details?
 
-All views use native Sections layouts and built-in display cards. The Energy view uses `statistic` and `statistics-graph` against the selected cloud lifetime entity, never Home Assistant's global `energy-*` cards.
+All views use native Sections layouts and built-in display cards. Overview and Energy use three purposeful desktop columns that stack naturally on mobile. Arrays groups short, timestamp-free live rows by the site's Pool shade and South west array names; per-inverter lifetime counters and serials live under Diagnostics. The Energy view uses `statistic` and `statistics-graph` against the selected cloud lifetime entity, never Home Assistant's global `energy-*` cards. Visible names changed from Microinverters/System to Arrays/Diagnostics while their routes remain `/microinverters` and `/system` for compatibility.
 
 ## Security and deployment
 
@@ -57,11 +57,11 @@ Every referenced entity must exist in live state. All Jinja strings are rendered
 
 ## Live deployment and verification
 
-The `enphase-2103` storage dashboard was created and then updated transactionally on 2026-08-28. The final preflight against Home Assistant 2026.8.3 resolved 39 live entities into 50 native cards across four views, rendered two Jinja templates, and reported `action=unchanged`. The dashboard registry round-trip confirmed title **Enphase 2103**, sidebar visibility, storage mode, and the expected icon. Home Assistant configuration validation returned HTTP 200, both Enphase entries remained `loaded`, and the Core log contained no Enphase-, Lovelace-, or template-related error after deployment.
+The `enphase-2103` storage dashboard was created on 2026-08-28 and professionally restructured transactionally on 2026-08-30. The final preflight against Home Assistant 2026.8.3 resolves 38 live entities into 57 native cards across four views, renders three Jinja templates, and reports `action=unchanged` after exact read-back. The dashboard registry round-trip confirms title **Enphase 2103**, sidebar visibility, storage mode, and the expected icon. Both Enphase entries remain `loaded` and the live UI continues to show all 14 local inverter entities.
 
 Final runtime evidence showed 14/14 local inverter entities available, with only Pool shade inverter `482237045136` at zero power; cloud inventory independently continued to report 13 normal and one error. The existing observability backend was also corrected to the recovered gateway address and returned a successful local read with 14 inverters.
 
-The browser gate rendered every view at 1440×1000 and 390×844 in light and dark modes. Its final report (`/tmp/enphase-home-assistant-qa.1Ot42Z/report.json`) contains 16 cases and 38 overlapping screenshots, confirms the sidebar route, and reports zero actionable browser errors. Representative desktop/mobile images were inspected manually. The only allowed errors were pre-existing global advanced-camera-card `focus-trap` duplication and its scoped-custom-element-registry source-map 404; this dashboard uses no custom frontend resource.
+The final browser gate rendered every view at 1440×1000 and 390×844 in light and dark modes. Its report (`/tmp/enphase-home-assistant-professional-qa.czglBE/report.json`) contains 16 cases and 36 overlapping screenshots and reports zero actionable browser errors. Representative desktop/mobile images for every view were inspected manually. The Arrays mobile view dropped from five screenshot segments to two after lifetime counters and raw diagnostics moved off the operational view. Allowed errors are restricted to the pre-existing global advanced-camera-card `focus-trap`/`side-drawer` duplicate registrations and the scoped-custom-element-registry source-map 404; this dashboard uses no custom frontend resource.
 
 ## GitHub research
 

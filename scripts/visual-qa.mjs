@@ -279,7 +279,9 @@ async function stopBrowser(browser) {
 
 function allowedExternalError(error) {
   const combined = `${error.url ?? ""} ${error.text ?? ""}`;
-  if (String(error.text).includes('the name "focus-trap" has already been used')) {
+  const duplicateKnownCameraElement = ["focus-trap", "side-drawer"]
+    .some((name) => String(error.text).includes(`the name "${name}" has already been used`));
+  if (error.kind === "exception" && duplicateKnownCameraElement) {
     return ["/hacsfiles/advanced-camera-card/", "/hacsfiles/frigate-hass-card/"].some((path) => combined.includes(path));
   }
   try {

@@ -1,6 +1,6 @@
 # Enphase 2103 Home Assistant dashboard
 
-A native, read-only Home Assistant dashboard for Jeremy's **2103** Enphase site (Enlighten system **5815605**). It installs as a dedicated **Enphase 2103** sidebar panel with responsive Overview, Energy, Microinverters, and System views.
+A native, read-only Home Assistant dashboard for Jeremy's **2103** Enphase site (Enlighten system **5815605**). It installs as a dedicated **Enphase 2103** sidebar panel with responsive Overview, Energy, Arrays, and Diagnostics views.
 
 The project deliberately uses a validated hybrid data path:
 
@@ -13,10 +13,12 @@ Runtime entity IDs are not fixed in source. Discovery follows config-entry and e
 
 ## Views
 
-- **Overview** — dynamic live digest, current local solar output, Recorder-derived production today, 24-hour power, seven-day energy, and only the optional site capabilities that actually have available entities.
-- **Energy** — cloud lifetime production and Recorder-derived daily/30-day changes; optional consumption, grid, and battery sections appear only when those channels become available.
-- **Microinverters** — inventory health that inspects error counts and individual device status text, all local per-panel power values, matched cloud lifetime production, and the supplied [Enlighten array view](https://enlighten.enphaseenergy.com/systems/5815605/arrays).
-- **System** — exact site identity, local/cloud source health, gateway, array, storage, and event diagnostics when available.
+- **Overview** — current local power, Recorder-derived production today, one concise actionable array-health message, and separate 24-hour/seven-day trend columns.
+- **Energy** — today and lifetime production plus 30-day energy and 48-hour power trends; optional consumption, grid, and battery sections appear only when those channels become available.
+- **Arrays** — live inverter output grouped by the real Pool shade and South west arrays, with short row labels and a direct [Enlighten array view](https://enlighten.enphaseenergy.com/systems/5815605/arrays).
+- **Diagnostics** — exact fault serials, source freshness, gateway/cloud/raw fleet health, per-inverter lifetime counters, unavailable telemetry, site identity, and data-source notes.
+
+The visible Arrays and Diagnostics tabs preserve the original `/microinverters` and `/system` routes so existing bookmarks continue to work. Daily-use views deliberately omit integration names, API notes, raw timestamps, serial-number lists, and optional cloud-endpoint details.
 
 The dashboard currently calls attention to the Pool shade microinverter if inventory continues to report it as not reporting; it does not trust the aggregate `Online` fleet label alone.
 
@@ -95,9 +97,9 @@ It authenticates through an ephemeral browser profile, renders all four routes a
 
 ## Current deployment
 
-The dashboard was deployed to Home Assistant 2026.8.3 on 2026-08-28 at `/enphase-2103/overview`. Final live preflight resolved 39 entities into 50 native cards, rendered both Jinja digests on the server, and returned an `unchanged` plan after the transactional update. Home Assistant configuration validation returned HTTP 200; both Enphase config entries were `loaded`; all 14 local inverter entities were available.
+The professional layout was deployed transactionally to Home Assistant 2026.8.3 on 2026-08-30 at `/enphase-2103/overview`. Final live preflight resolves 38 entities into 57 native cards across four views, renders three Jinja health summaries on the server, and returns `action=unchanged` after exact storage read-back. Both Enphase config entries remain loaded and all 14 local inverter entities are available.
 
-The final browser report is `/tmp/enphase-home-assistant-qa.1Ot42Z/report.json`: 16 route/theme/viewport cases and 38 full-scroll screenshots passed with no actionable browser errors. The only allowed frontend noise came from a globally loaded camera-card resource that this dashboard does not reference. The existing Home Assistant Prometheus endpoint also exports the new aggregate, inverter, and cloud entities, so the observability stack receives them through its established HA scrape.
+The final browser report is `/tmp/enphase-home-assistant-professional-qa.czglBE/report.json`: 16 route/theme/viewport cases and 36 overlapping screenshots passed with no actionable browser errors. Representative Overview, Energy, Arrays, and Diagnostics screens were inspected manually in desktop/mobile and light/dark modes. The only allowed frontend noise comes from a globally loaded camera-card resource and a scoped-custom-element-registry source-map request that this native dashboard does not reference. The existing Home Assistant Prometheus endpoint continues to export the aggregate, inverter, and cloud entities through its established scrape.
 
 ## Safety model
 
@@ -107,6 +109,6 @@ The final browser report is `/tmp/enphase-home-assistant-qa.1Ot42Z/report.json`:
 - Registered-but-`unavailable` optional consumption, grid, battery, EVSE, and weather entities are omitted.
 - Required local power and cloud lifetime entities must exist in live state; unavailable readings are shown honestly, never converted to zero.
 - Local day/seven-day counters are intentionally excluded because the audited gateway reported zero while producing. The older local lifetime statistic is also excluded because its recovery catch-up jump would distort daily change.
-- Cloud lifetime Recorder history begins with this deployment; the first complete daily bar appears after the next midnight.
+- Cloud lifetime Recorder history began with the original 2026-08-28 deployment and now provides complete daily bars.
 
 See [docs/analysis.md](docs/analysis.md) for the audited data model and [QA_CHECKLIST.md](QA_CHECKLIST.md) for release evidence.

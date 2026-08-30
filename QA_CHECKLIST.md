@@ -2,6 +2,23 @@
 
 Status values: `implemented`, `blocked`, `deferred`, or `not applicable`.
 
+## Professional dashboard refinement · 2026-08-30
+
+This checklist records Jeremy's request to make the dashboard professional and useful and to move diagnostic text onto its own tab.
+
+| Feedback item | Status | Evidence |
+| --- | --- | --- |
+| Make Overview operational-first: current power, today, health, and recent trend | implemented | `overviewView`; one concise actionable health template plus current/today KPIs and separate 24-hour/seven-day columns |
+| Use balanced desktop sections while retaining a clean mobile stack | implemented | Overview and Energy use three semantic Sections columns; final desktop/mobile captures inspected |
+| Move cloud/source/API/Recorder/unavailable-telemetry explanations off daily-use views | implemented | Visible **Diagnostics** fourth tab preserves `/system`; technical copy and unavailable filter live there |
+| Simplify Energy around today, lifetime, and production trends | implemented | Permanent prose removed; compact totals plus `Daily production · 30 days` and `Power · 48 hours` |
+| Turn Microinverters into a concise array-operating view | implemented | Visible **Arrays** tab groups live rows by Pool shade and South west; lifetime counters moved to Diagnostics |
+| Resolve contradictory fleet copy | implemented | Three Jinja summaries derive `13 normal · 1 needs attention` from status attributes/device records; no `14 reporting` claim |
+| Remove serial and state-change timestamp clutter from routine inverter rows | implemented | Arrays rows are `inverter 01` etc. with no secondary timestamp; exact serials remain in Diagnostics |
+| Eliminate excessive fixed card height and mobile whitespace | implemented | Variable entities cards use content height; Arrays mobile dropped from five capture segments to two |
+| Preserve native, read-only, site-pinned safety constraints | implemented | Validator still rejects custom/global Energy/control/action/navigation types; exact site/gateway tests pass |
+| Update unit assertions and all four-route browser QA | implemented | `npm run check` 9/9; live preflight/read-back; final report `/tmp/enphase-home-assistant-professional-qa.czglBE/report.json` |
+
 | Gate | Status | Evidence |
 | --- | --- | --- |
 | Exact site 2103 / system 5815605 selection | implemented | `discoverEnphase` requires one loaded `enphase_ev` entry with site-scoped entity evidence; ambiguity/wrong-site tests |
@@ -19,17 +36,17 @@ Status values: `implemented`, `blocked`, `deferred`, or `not applicable`.
 | External Enlighten arrays link | implemented | Plain Markdown link; URL-aware entity-reference validation; no iframe/navigation action |
 | Candidate references live entities | implemented | `validateDashboard`; missing-reference unit test |
 | Server-side Jinja rendering | implemented | `validateDashboardTemplates`; all dynamic strings POST to `/api/template` before plan/apply |
-| Four responsive Sections views | implemented | Overview, Energy, Microinverters, System assertions |
+| Four responsive Sections views | implemented | Overview, Energy, Arrays, Diagnostics assertions; legacy route paths retained |
 | Transactional create/update/read-back/rollback | implemented | Planning/apply/rollback unit coverage and exact `verifyDashboard` round-trip |
 | Private checksummed backup | implemented | Mode-0600 file, whole-document checksum, per-config checksums, no token field |
 | Drift-guarded restore | implemented | Drift rejection, prior restore, wrong-dashboard rejection in deploy flow |
-| Static validation | implemented | Final `npm run check`: syntax checks plus 9/9 tests, including compact remainder-card regression, on 2026-08-28 |
-| Live read-only preflight | implemented | HA 2026.8.3: site 2103/system 5815605, 39 live references, 50 cards, four views, two rendered Jinja templates; final plan `unchanged` |
-| Dashboard deployment | implemented | Created and then polished transactionally; private rollback artifacts `/tmp/enphase-ha-dashboard-UfbAab/backup.json` and `/tmp/enphase-ha-dashboard-X67aUD/backup.json`; exact read-back and idempotent no-op verified |
-| Desktop rendering | implemented | Final report `/tmp/enphase-home-assistant-qa.1Ot42Z/report.json`; all four routes at 1440×1000, light and dark |
-| Mobile rendering | implemented | Same report; all four routes at 390×844 with overlapping full-scroll captures; small inverter remainder groups visually compacted |
-| Light/dark rendering | implemented | 16 cases and 38 screenshots across both themes/viewports; zero actionable browser errors |
-| Sidebar route and four live routes | implemented | Automated route/sidebar inspection passed and representative screenshots were reviewed manually |
+| Static validation | implemented | Final `npm run check`: syntax checks plus 9/9 tests on 2026-08-30 |
+| Live read-only preflight | implemented | HA 2026.8.3: site 2103/system 5815605, 38 live references, 57 native cards, four views, three rendered Jinja templates; final plan `unchanged` |
+| Dashboard deployment | implemented | Professional layout deployed transactionally; final private rollback artifact `/tmp/enphase-ha-dashboard-dfShcl/backup.json`; exact read-back and idempotent no-op verified |
+| Desktop rendering | implemented | Final report `/tmp/enphase-home-assistant-professional-qa.czglBE/report.json`; all four routes at 1440×1000, light and dark |
+| Mobile rendering | implemented | Same report; all four routes at 390×844 with overlapping full-scroll captures; Arrays reduced to two segments |
+| Light/dark rendering | implemented | 16 cases and 36 screenshots across both themes/viewports; zero actionable browser errors |
+| Sidebar route and four live routes | implemented | Final browser gate passed; Enphase 2103 sidebar selection and all four routes were visible in manually reviewed captures |
 | Forms, CTAs, service calls, and equipment controls | not applicable | Monitoring-only dashboard intentionally contains none |
 | Public noindex/canonical/robots | not applicable | Authenticated private Home Assistant panel, not a public website |
-| Commit and push | implemented | Root implementation commit `8823346` pushed to `origin/main`; final `git status -sb` verification is part of the ship handoff |
+| Commit and push | implemented | Professional refinement committed as a task-owned main-branch change and pushed to `origin/main`; final synced status is part of the ship handoff |

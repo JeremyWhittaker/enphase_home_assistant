@@ -241,6 +241,7 @@ test("dashboard has four native Sections views, no global Energy cards, and only
   const result = validateDashboard(dashboard, data.states);
   const types = dashboardTypes(dashboard);
   assert.deepEqual(dashboard.views.map((view) => view.path), ["overview", "energy", "microinverters", "system"]);
+  assert.deepEqual(dashboard.views.map((view) => view.title), ["Overview", "Energy", "Arrays", "Diagnostics"]);
   assert.ok(dashboard.views.every((view) => view.type === "sections"));
   assert.ok(types.every((type) => validationPolicy.allowedTypes.includes(type)));
   assert.ok(!types.some((type) => type.startsWith("energy-")));
@@ -256,10 +257,23 @@ test("dashboard has four native Sections views, no global Energy cards, and only
   assert.ok(!stableString(dashboard).includes("seven_days_production"));
 
   const completeArrayDashboard = buildDashboard(discover(fixture({ microinverterCount: 14 })));
-  const remainderCard = valuesOfType(completeArrayDashboard, "entities")
-    .find((card) => card.title === "Live power · group 2");
-  assert.equal(remainderCard.entities.length, 2);
-  assert.equal(remainderCard.grid_options.rows, 4);
+  const arrayView = completeArrayDashboard.views[2];
+  const livePowerCards = valuesOfType(arrayView, "entities").filter((card) => card.title === "Live power");
+  assert.deepEqual(livePowerCards.map((card) => card.entities.length), [1, 13]);
+  assert.ok(livePowerCards.every((card) => !("rows" in card.grid_options)));
+  const operationalRows = livePowerCards.flatMap((card) => card.entities);
+  assert.ok(operationalRows.every((row) => !/\d{12}/.test(row.name)));
+  assert.ok(operationalRows.every((row) => !("secondary_info" in row)));
+
+  const overview = stableString(completeArrayDashboard.views[0]);
+  const energy = stableString(completeArrayDashboard.views[1]);
+  const diagnostics = stableString(completeArrayDashboard.views[3]);
+  assert.ok(!overview.includes("optional cloud endpoint families"));
+  assert.ok(!overview.includes("paid developer API"));
+  assert.ok(!energy.includes("Recorder"));
+  assert.ok(diagnostics.includes("Home Assistant Recorder"));
+  assert.ok(diagnostics.includes("paid developer API"));
+  assert.ok(diagnostics.includes("Unavailable telemetry"));
 });
 
 test("minimal dashboard omits optional flow cards and keeps dynamic digest honest", () => {
@@ -270,11 +284,11 @@ test("minimal dashboard omits optional flow cards and keeps dynamic digest hones
   assert.ok(!serialized.includes("Daily grid energy"));
   assert.ok(!serialized.includes("Daily battery energy"));
   const templates = collectDashboardTemplates(dashboard);
-  assert.equal(templates.length, 2);
-  assert.ok(templates[0].includes("Solar telemetry is unavailable"));
-  assert.ok(templates[0].includes("solar_raw | lower in unavailable"));
+  assert.equal(templates.length, 3);
+  assert.ok(templates[0].includes("Production data is unavailable"));
+  assert.ok(templates[0].includes(`states('${discover(data).entities.currentProductionPower}') | lower in unavailable`));
   assert.ok(templates[0].includes("status_counts"));
-  assert.ok(templates[0].includes("even if fleet connectivity says Online"));
+  assert.ok(templates[0].includes("need{% if attention_count == 1 %}s{% endif %} attention"));
   const discovered = discover(data);
   assert.ok(templates[0].includes(`state_attr('${discovered.entities.microinverterStatus}', 'status_counts')`));
   assert.ok(templates[0].includes(`state_attr('${discovered.entities.microinverterReportingCount}', 'devices')`));
