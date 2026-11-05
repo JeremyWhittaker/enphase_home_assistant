@@ -462,22 +462,47 @@ test("missing microinverter counters never become stale dashboard references", (
   }
 });
 
-test("source labels preserve local power and distinct cloud energy history", () => {
-  const data = fixture();
-  const discovery = discover(data);
-  const dashboard = buildDashboard(discovery);
-  const localPower = discovery.entities.currentProductionPower;
-  const cloudEnergy = discovery.entities.solarProductionEnergy;
-  const localEnergy = discovery.entities.localLifetimeEnergy;
-  assert.ok(localEnergy);
-  const statistics = [...valuesOfType(dashboard, "statistic"), ...valuesOfType(dashboard, "statistics-graph")];
-  assert.ok(statistics.every((card) => card.entity === cloudEnergy || card.entities?.every((row) => row.entity === cloudEnergy)));
-  assert.ok(valuesOfType(dashboard, "history-graph").every((card) => card.entities.every((row) => row.entity === localPower)));
-  assert.ok(!collectEntityReferences(dashboard.views.slice(0, 3)).has(localEnergy));
-  assert.ok(collectEntityReferences(dashboard.views[3]).has(localEnergy));
-  assert.match(stableString(dashboard), /Cloud power · scope unverified/);
-  assert.match(stableString(dashboard), /Their difference is not a measured production loss/);
-  assert.match(stableString(dashboard.views[1]), /Cloud lifetime energy/);
-  assert.match(stableString(dashboard.views[0]), /Local power now/);
-  assert.match(stableString(dashboard.views[0]), /Cloud today/);
+test("dated local coverage never splices local catch-up into cloud charts, even when local history is absent", () => {
+  for (const localState of ["available", "unavailable", "unknown", "missing"]) {
+    const data = fixture();
+    const baseline = discover(data);
+    const localId = baseline.entities.localLifetimeEnergy;
+    if (localState === "missing") data.states = data.states.filter((state) => state.entity_id !== localId);
+    else if (localState !== "available") data.states.find((state) => state.entity_id === localId).state = localState;
+    const discovery = discover(data);
+    const dashboard = buildDashboard(discovery);
+    const localPower = discovery.entities.currentProductionPower;
+    const cloudEnergy = discovery.entities.solarProductionEnergy;
+    const localEnergy = discovery.entities.localLifetimeEnergy;
+    assert.equal(cloudEnergy, baseline.entities.solarProductionEnergy);
+    const statistics = [...valuesOfType(dashboard, "statistic"), ...valuesOfType(dashboard, "statistics-graph")];
+    assert.ok(statistics.every((card) => card.entity === cloudEnergy || card.entities?.every((row) => row.entity === cloudEnergy)));
+    assert.ok(valuesOfType(dashboard, "history-graph").every((card) => card.entities.every((row) => row.entity === localPower)));
+    assert.ok(!collectEntityReferences(dashboard.views.slice(0, 3)).has(localEnergy));
+    if (localEnergy) assert.ok(collectEntityReferences(dashboard.views[3]).has(localEnergy));
+    else assert.ok(!collectEntityReferences(dashboard).has(localId));
+    assert.match(stableString(dashboard), /Cloud power · scope unverified/);
+    assert.match(stableString(dashboard), /Their difference is not a measured production loss/);
+    assert.match(stableString(dashboard.views[1]), /Cloud lifetime energy/);
+    assert.match(stableString(dashboard.views[0]), /Local power now/);
+    assert.match(stableString(dashboard.views[0]), /Cloud today/);
+    for (const view of dashboard.views.slice(0, 2)) {
+      const notes = valuesOfType(view, "markdown").filter((card) => card.content.includes("Local counter gap"));
+      assert.equal(notes.length, 1);
+      assert.match(notes[0].content, /Oct 28–Nov 4, 2026/);
+      assert.match(notes[0].content, /local daily and monthly totals are uncertain/);
+      assert.match(notes[0].content, /Cloud totals use a separate counter with unverified coverage/);
+      assert.match(notes[0].content, /\[Coverage details\]\(\/enphase-2103\/system\)/);
+      assert.ok(!notes[0].content.includes("109.476")); // Detailed local catch-up is not attached to Cloud today.
+    }
+    const diagnosticText = stableString(dashboard.views[3]);
+    assert.match(diagnosticText, /179-hour reporting gap/);
+    assert.match(diagnosticText, /109\.476 kWh/);
+    assert.match(diagnosticText, /catch-up belongs to the local counter/);
+    assert.match(diagnosticText, /not applied to this page's Cloud today/);
+    assert.match(diagnosticText, /not verified whole-home production/);
+    assert.deepEqual(dashboard.views.map((view) => view.path), ["overview", "energy", "microinverters", "system"]);
+    assert.equal(validateDashboard(dashboard, data.states).viewCount, 4);
+    assert.equal(collectDashboardTemplates(dashboard).length, 3);
+  }
 });

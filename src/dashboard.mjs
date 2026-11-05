@@ -87,6 +87,14 @@ function dailyChangeCard(entity, name) {
   };
 }
 
+function localHistoryNotice() {
+  return {
+    type: "markdown",
+    content: "**Local counter gap · Oct 28–Nov 4, 2026:** local daily and monthly totals are uncertain. Cloud totals use a separate counter with unverified coverage. [Coverage details](/enphase-2103/system).",
+    grid_options: { columns: "full" },
+  };
+}
+
 function unavailableCard(entities) {
   return {
     type: "entity-filter",
@@ -181,6 +189,7 @@ function overviewView(discovery) {
         heading("At a glance", "mdi:white-balance-sunny"),
         tile(e.currentProductionPower, "Local power now", "mdi:solar-power", 6),
         dailyChangeCard(e.solarProductionEnergy, "Cloud today"),
+        localHistoryNotice(),
         { type: "markdown", content: overviewDigest(discovery), grid_options: { columns: "full" } },
       ],
     },
@@ -253,6 +262,7 @@ function energyView(discovery) {
         heading("Cloud production totals", "mdi:solar-power"),
         dailyChangeCard(e.solarProductionEnergy, "Cloud today"),
         tile(e.solarProductionEnergy, "Cloud lifetime energy", "mdi:counter", 6),
+        localHistoryNotice(),
       ],
     },
     {
@@ -517,6 +527,10 @@ function diagnosticsView(discovery) {
 **Cloud energy history:** the lifetime tile and daily energy charts use Enlighten's site energy counter. Home Assistant Recorder calculates daily changes from this counter. These energy charts are not calculated from the local power graph.
 
 **Separate local history:** the gateway's lifetime energy counter is shown above when available. Its total differs from the cloud counter; their starting dates and coverage have not been reconciled. Keep the histories separate. Their difference is not a measured production loss.
+
+**Local counter coverage · November 4, 2026:** a 179-hour reporting gap from October 28 to November 4 ended with a **109.476 kWh** accumulated increase credited on November 4. That is not a measurement of November 4 production alone. The daily allocation across the gap, including the October/November month boundary, is unknown. Whole-home Energy's selected local counter has this limitation; no missing energy has been redistributed or recalibrated.
+
+**Cloud remains separate:** that documented catch-up belongs to the local counter and is not applied to this page's Cloud today, lifetime or cloud-production chart series. No equivalent cloud catch-up was established by this review. Cloud coverage and array scope remain unreconciled with local history, so these cloud totals are not verified whole-home production.
 
 The gateway's today and seven-day counters are excluded because they can report zero during active production. This equipment page is independent of Home Assistant's global Energy preferences and does not use Enphase's paid developer API. A cloud status of **Degraded** can reflect optional endpoints while some readings remain available.`,
         grid_options: { columns: "full" },

@@ -2,6 +2,8 @@
 
 Data audit: 2026-08-28; dashboard UX refinement: 2026-08-30 (America/Phoenix)
 
+Local-history coverage follow-up: November 4 evidence, documented November 5, 2026. This dated observation is separate from the August audit below.
+
 ## Selected system and integrations
 
 The account contains two Enlighten systems. This project admits only site name **2103**, Enlighten system id **5815605**. Selection is fail-closed and uses the `enphase_ev` config entry plus exact entity-registry unique IDs such as `enphase_ev_site_5815605_solar_production`; it does not select by a mutable runtime entity ID.
@@ -16,12 +18,20 @@ No single audited source was correct for every time horizon:
 | --- | --- | --- |
 | Current site production | official local `enphase_envoy` aggregate | Direct LAN reading; one-minute updates; audited live while producing |
 | Current panel production | 14 official local inverter sensors | Direct per-inverter readings; exposed the zero-power Pool shade unit |
-| Lifetime/site energy | `enphase_ev` site solar production | Current monotonic kWh counter with `total_increasing`; correct basis for new Recorder statistics |
+| Cloud energy history | `enphase_ev` site solar production | Preserves established cloud Recorder history; local/cloud coverage remains unreconciled |
 | Today/recent days | Recorder change statistics on cloud lifetime | Avoids inaccurate local day/seven-day counters and global EG4 Energy cards |
 | Fleet inventory/health | `enphase_ev` reporting + connectivity attributes | Contains array membership, device status text, counts, model/firmware summaries |
 | Per-inverter lifetime | 14 `enphase_ev_inverter_<serial>_lifetime_energy` sensors | Semantically paired to local panel power through exact serials |
 
 The local daily and seven-day production entities reported `0.0` while aggregate production was active, so they are not treated as authoritative. The local lifetime statistic had a gap followed by an approximately 175 kWh catch-up jump after recovery, which would corrupt a calendar-day `change`. The cloud lifetime entity was newly created at audit time and had no history, so Recorder-derived daily output will be partial initially and first becomes a complete daily bar after the next midnight.
+
+### November 4 local-counter coverage
+
+The later local lifetime history has a **179-hour gap from October 28 to November 4, 2026**. Restoration credited an accumulated **109.476 kWh** on November 4. That increase spans missing observations, not just November 4 production. Daily allocation across the gap and the October/November monthly split are unknown. This is a separate event from the earlier August catch-up described above; no redistribution, conversion factor or calibration was applied.
+
+Home Assistant's whole-home Energy preferences now select this local Enphase counter separately from EG4. Those local history totals inherit the dated allocation limit. This equipment dashboard still uses the distinct **cloud** lifetime counter for Cloud today, lifetime and daily charts. The documented local catch-up is not inserted into that cloud series, and this review establishes no equivalent cloud gap or catch-up. The sources' coverage, starting dates and array scope remain unreconciled; a difference between them is not measured lost production or proof of whole-home coverage.
+
+Overview and Energy therefore carry one concise local-only history note beside their cloud totals. Diagnostics gives the duration, accumulated increase, cross-month limitation and source boundary. Arrays remains a local live-power view; no gauge or local energy chart is added. Counter identities, units, current-power selection and all four routes are preserved.
 
 ## Live fleet finding
 
@@ -56,6 +66,8 @@ The dashboard is monitoring-only. Validation permits entity domains `sensor`, `b
 Every referenced entity must exist in live state. All Jinja strings are rendered through Home Assistant's `/api/template` endpoint during preflight. Create/update is storage-mode only, preceded by a private checksummed backup, verified by an exact read-back, and automatically rolled back on failure. Explicit restore is checksum- and drift-guarded.
 
 ## Live deployment and verification
+
+**November 4, 2026:** the source-labelled/missing-counter dashboard was deployed with supported backup and exact read-back, then passed 16 cases across four views, desktop/mobile and light/dark. The November 5 historical-coverage copy is a subsequent change with its own successful preflight, exact save/read-back and sixteen desktop/mobile/light/dark cases: 42 screenshots, zero browser errors. The final shortened notice and Coverage details link passed the complete matrix again, with representative captures inspected. No counter data, allocation or source binding changed.
 
 The `enphase-2103` storage dashboard was created on 2026-08-28 and professionally restructured transactionally on 2026-08-30. The final preflight against Home Assistant 2026.8.3 resolves 38 live entities into 57 native cards across four views, renders three Jinja templates, and reports `action=unchanged` after exact read-back. The dashboard registry round-trip confirms title **Enphase 2103**, sidebar visibility, storage mode, and the expected icon. Both Enphase entries remain `loaded` and the live UI continues to show all 14 local inverter entities.
 

@@ -2,6 +2,15 @@
 
 Status values: `implemented`, `blocked`, `deferred`, or `not applicable`.
 
+## Dated historical coverage · 2026-11-05
+
+| Feedback item | Status | Evidence |
+| --- | --- | --- |
+| F19: show the dated local history gap without mislabelling cloud energy | implemented | Overview/Energy have one concise local-only note; Diagnostics records the 179-hour October 28–November 4 gap and 109.476 kWh credited on November 4, including unknown daily/cross-month allocation |
+| Preserve distinct counters, live power, units, routes and read-only policy | implemented | Expanded existing source-contract test covers available, unavailable, unknown and absent local counters; cloud statistics retain their original entity, local energy is never spliced, all four routes/native validation pass |
+| Full syntax and Node checks | implemented | `npm run check`: all syntax checks and 11 tests pass; three dynamic summaries remain unchanged |
+| New coverage-copy deployment and visual QA | implemented | November 5 exact read-back and full four-route desktop/mobile/light/dark matrix: sixteen cases / 42 screenshots / zero browser errors. Final concise notice and Coverage details link passed the same full matrix; representative captures inspected |
+
 ## Energy review · 2026-11-04
 
 | Feedback item | Status | Evidence |
@@ -13,9 +22,9 @@ Status values: `implemented`, `blocked`, `deferred`, or `not applicable`.
 | Focused tests and read-only live preflight | implemented | `node --test test/core.test.mjs`: 11/11. Live candidate: 24 valid references, 54 cards, four views, three server-rendered Jinja summaries, zero configuration writes |
 | Native candidate visual QA | implemented | Private in-memory preview: 16 cases across all four routes at 1440×1000 and 390×844, light/dark; 40 private captures, zero native warnings/errors; report below. No dummy entities, saved HA configuration, or equipment clicks |
 | Full syntax/test release check | implemented | Parent repeated `jeremy-heavy --wait 0 -- npm run check` after refining the counter-coverage wording; all syntax checks and 11 tests passed |
-| Deployed dashboard verification | deferred | Parent owns supported deployment, exact backup/readback and post-deployment desktop/mobile verification |
+| Deployed dashboard verification | implemented | November 4 supported deployment and exact read-back completed; 16 deployed browser cases covered all four views at desktop/mobile sizes in light/dark themes. This predates the November 5 coverage-copy change |
 
-Private candidate evidence: `/home/jeremy/.cache/jeremy-scratch/enphase_home_assistant/energy-fixes-20261104/preflight.json` and `report.json`. Native candidate screenshots remain outside Git; manual review covered desktop Overview and mobile Energy/Diagnostics, including the explicit missing-counter explanation. Deployment remains a separate parent-owned step.
+Private candidate evidence: `/home/jeremy/.cache/jeremy-scratch/enphase_home_assistant/energy-fixes-20261104/preflight.json` and `report.json`. Native candidate screenshots remain outside Git; manual review covered desktop Overview and mobile Energy/Diagnostics, including the explicit missing-counter explanation. The November 4 baseline was subsequently deployed and checked in all 16 browser cases. The later coverage-copy gate above remains separate.
 
 
 ## Professional dashboard refinement · 2026-08-30

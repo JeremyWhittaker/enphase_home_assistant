@@ -8,6 +8,7 @@ The page keeps two reporting paths distinct:
 - the read-only `enphase_ev` integration identifies the exact Enlighten site and supplies a separate lifetime-energy history, inventory, connectivity, and cloud health;
 - the tiles and charts labelled **cloud energy** retain the existing Recorder history derived from that cloud lifetime counter;
 - the local lifetime counter is shown separately in Diagnostics; local and cloud totals differ, and their starting dates and coverage have not been reconciled;
+- the dated local-history note identifies the October 28–November 4 gap without treating it as a gap in the separate cloud counter;
 - Home Assistant's global `energy-*` cards are not embedded here: this equipment page selects its own sources independently of whole-home Energy preferences.
 
 Runtime entity IDs are not fixed in source. Discovery follows config-entry and entity-registry relationships and stable integration unique IDs, then validates every reference against live state. It fails closed if the cloud site or local gateway is missing, unloaded, or ambiguous.
@@ -102,7 +103,9 @@ The November 4 live review found fourteen stale per-microinverter lifetime rows,
 
 The same review measured local aggregate power at 1,207 W and the fourteen local microinverters at a combined 1,206 W, while cloud power reported 312 W. Local and cloud lifetime energy also differed (approximately 11,335 and 12,098 kWh). These are dated observations, not conversion factors. Local power remains the primary series; cloud power is labelled **scope unverified** and never replaces it. Energy tiles and daily charts continue their established cloud history. The separate local lifetime counter is diagnostic here; it is not spliced into that history. Whole-home Energy can select a verified Enphase source separately without changing this page.
 
-The candidate preserves all four URLs and read-only actions. See [QA_CHECKLIST.md](QA_CHECKLIST.md) for current test and native browser evidence. Deployment and its final read-back are recorded separately; the August 30 professional layout was the prior deployed baseline.
+The local lifetime history contains a **179-hour outage from October 28 to November 4, 2026**. On restoration, a **109.476 kWh** catch-up was credited on November 4. It cannot all be assigned to that day's production; local daily allocation and the October/November monthly split are uncertain. Overview and Energy give a short dated note, with the full explanation in Diagnostics. Whole-home Energy's selected local counter has this limitation. This page's **Cloud today**, lifetime and daily charts keep the separate cloud counter: the local catch-up is not added to them, and no equivalent cloud catch-up was established. The cloud series is not verified whole-home production.
+
+The November 4 source-labelled dashboard was deployed and read back, then passed 16 browser cases covering all four views at desktop/mobile sizes in light/dark themes. The new historical-coverage copy still needs deployment and fresh visual verification; it does not inherit that earlier pass. All four URLs and read-only actions remain. See [QA_CHECKLIST.md](QA_CHECKLIST.md) for the dated evidence and remaining gate.
 
 ## Safety model
 
@@ -115,3 +118,11 @@ The candidate preserves all four URLs and read-only actions. See [QA_CHECKLIST.m
 - Cloud lifetime Recorder history began with the original 2026-08-28 deployment. Missing updates can leave gaps; cloud health is shown in Diagnostics.
 
 See [docs/analysis.md](docs/analysis.md) for the audited data model and [QA_CHECKLIST.md](QA_CHECKLIST.md) for release evidence.
+
+## Coverage-copy acceptance — November 5, 2026
+
+The dated local-history notice is deployed with exact save/read-back. All four routes passed
+16 desktop/mobile light/dark cases, with 42 screenshots and no browser errors. After the
+notice was shortened and its Coverage details link added, the full matrix passed again;
+representative captures were inspected. Local catch-up remains separate from cloud Today,
+lifetime and history charts; no counter values or allocations were changed.
