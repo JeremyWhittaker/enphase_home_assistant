@@ -105,7 +105,7 @@ The same review measured local aggregate power at 1,207 W and the fourteen local
 
 The local lifetime history contains a **179-hour outage from October 28 to November 4, 2026**. On restoration, a **109.476 kWh** catch-up was credited on November 4. It cannot all be assigned to that day's production; local daily allocation and the October/November monthly split are uncertain. Overview and Energy give a short dated note, with the full explanation in Diagnostics. Whole-home Energy's selected local counter has this limitation. This page's **Cloud today**, lifetime and daily charts keep the separate cloud counter: the local catch-up is not added to them, and no equivalent cloud catch-up was established. The cloud series is not verified whole-home production.
 
-The November 4 source-labelled dashboard was deployed and read back, then passed 16 browser cases covering all four views at desktop/mobile sizes in light/dark themes. The new historical-coverage copy still needs deployment and fresh visual verification; it does not inherit that earlier pass. All four URLs and read-only actions remain. See [QA_CHECKLIST.md](QA_CHECKLIST.md) for the dated evidence and remaining gate.
+The November 4 source-labelled dashboard was deployed and read back, then passed 16 browser cases covering all four views at desktop/mobile sizes in light/dark themes. The historical-coverage copy was separately deployed and visually verified November 5, as recorded below. All four URLs and read-only actions remain. See [QA_CHECKLIST.md](QA_CHECKLIST.md) for the dated evidence and remaining gate.
 
 ## Safety model
 
