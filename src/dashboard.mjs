@@ -179,17 +179,17 @@ function overviewView(discovery) {
       type: "grid",
       cards: [
         heading("At a glance", "mdi:white-balance-sunny"),
-        tile(e.currentProductionPower, "Producing now", "mdi:solar-power", 6),
-        dailyChangeCard(e.solarProductionEnergy, "Generated today"),
+        tile(e.currentProductionPower, "Local power now", "mdi:solar-power", 6),
+        dailyChangeCard(e.solarProductionEnergy, "Cloud today"),
         { type: "markdown", content: overviewDigest(discovery), grid_options: { columns: "full" } },
       ],
     },
     {
       type: "grid",
       cards: [
-        heading("Power today", "mdi:chart-areaspline"),
-        historyCard("Power · 24 hours", 24, [
-          { entity: e.currentProductionPower, name: "Solar production" },
+        heading("Local array power", "mdi:chart-areaspline"),
+        historyCard("Local power · 24 hours", 24, [
+          { entity: e.currentProductionPower, name: "Local array power" },
         ]),
       ],
     },
@@ -197,8 +197,8 @@ function overviewView(discovery) {
       type: "grid",
       cards: [
         heading("Recent days", "mdi:chart-bar"),
-        changeGraph("Daily production · 7 days", 7, [
-          { entity: e.solarProductionEnergy, name: "Solar" },
+        changeGraph("Cloud energy · 7 days", 7, [
+          { entity: e.solarProductionEnergy, name: "Cloud energy" },
         ]),
       ],
     },
@@ -250,17 +250,17 @@ function energyView(discovery) {
     {
       type: "grid",
       cards: [
-        heading("Production totals", "mdi:solar-power"),
-        dailyChangeCard(e.solarProductionEnergy, "Generated today"),
-        tile(e.solarProductionEnergy, "Lifetime production", "mdi:counter", 6),
+        heading("Cloud production totals", "mdi:solar-power"),
+        dailyChangeCard(e.solarProductionEnergy, "Cloud today"),
+        tile(e.solarProductionEnergy, "Cloud lifetime energy", "mdi:counter", 6),
       ],
     },
     {
       type: "grid",
       cards: [
-        heading("Daily production", "mdi:chart-bar"),
-        changeGraph("Daily production · 30 days", 30, [
-          { entity: e.solarProductionEnergy, name: "Solar" },
+        heading("Cloud energy history", "mdi:chart-bar"),
+        changeGraph("Cloud energy · 30 days", 30, [
+          { entity: e.solarProductionEnergy, name: "Cloud energy" },
         ]),
       ],
     },
@@ -268,8 +268,8 @@ function energyView(discovery) {
       type: "grid",
       cards: [
         heading("Power profile", "mdi:chart-areaspline"),
-        historyCard("Power · 48 hours", 48, [
-          { entity: e.currentProductionPower, name: "Solar production" },
+        historyCard("Local power · 48 hours", 48, [
+          { entity: e.currentProductionPower, name: "Local array power" },
         ]),
       ],
     },
@@ -401,7 +401,7 @@ function diagnosticsView(discovery) {
   const e = discovery.entities;
   const unavailable = compact([
     entityRow(e.currentProductionPower, "Local production"),
-    entityRow(e.solarProductionEnergy, "Lifetime production"),
+    entityRow(e.solarProductionEnergy, "Cloud lifetime energy"),
     e.currentConsumptionPower && entityRow(e.currentConsumptionPower, "Home consumption"),
     e.currentGridPower && entityRow(e.currentGridPower, "Grid power"),
     e.currentBatteryPower && entityRow(e.currentBatteryPower, "Battery power"),
@@ -415,7 +415,7 @@ function diagnosticsView(discovery) {
     e.cloudErrorCode && entityRow(e.cloudErrorCode, "Cloud error", "mdi:cloud-alert"),
     e.lastSuccessfulUpdate && entityRow(e.lastSuccessfulUpdate, "Last successful update", "mdi:update"),
     e.cloudLatency && entityRow(e.cloudLatency, "Cloud latency", "mdi:speedometer"),
-    e.cloudProductionPower && entityRow(e.cloudProductionPower, "Portal power snapshot (lagged)", "mdi:cloud-sync"),
+    e.cloudProductionPower && entityRow(e.cloudProductionPower, "Cloud power · scope unverified", "mdi:cloud-sync"),
   ]);
   const sections = [
     {
@@ -433,7 +433,8 @@ function diagnosticsView(discovery) {
   ];
 
   const gatewayRows = compact([
-    entityRow(e.currentProductionPower, "Local production telemetry", "mdi:solar-power"),
+    entityRow(e.currentProductionPower, "Local array power", "mdi:solar-power"),
+    e.localLifetimeEnergy && entityRow(e.localLifetimeEnergy, "Local lifetime energy", "mdi:counter"),
     e.gatewayStatus && entityRow(e.gatewayStatus, "Gateway inventory status", "mdi:router-wireless"),
     e.gatewayLastReported && entityRow(e.gatewayLastReported, "Gateway last reported", "mdi:clock-check-outline"),
     e.gatewayProductionMeter && entityRow(e.gatewayProductionMeter, "Production meter", "mdi:meter-electric-outline"),
@@ -472,6 +473,21 @@ function diagnosticsView(discovery) {
     });
   }
 
+  const missingCounters = discovery.microinverterCounters.missing;
+  if (missingCounters) {
+    sections.push({
+      type: "grid",
+      cards: [
+        heading("Microinverter energy counters", "mdi:counter"),
+        {
+          type: "markdown",
+          content: `This view includes per-inverter lifetime energy counters for **${discovery.microinverterCounters.available} of ${discovery.microinverters.length}** microinverters. Arrays shows their local power readings. Site energy history uses the separate cloud total.`,
+          grid_options: { columns: "full" },
+        },
+      ],
+    });
+  }
+
   for (const { arrayName, records } of microinvertersByArray(discovery.microinverters)) {
     const rows = records
       .filter((microinverter) => microinverter.lifetimeEnergy)
@@ -496,9 +512,13 @@ function diagnosticsView(discovery) {
         content: `**Site:** 2103 · Enlighten system **${discovery.site.systemId}**<br>
 **IQ Gateway:** **${discovery.site.gatewaySerial}**
 
-Live production and per-inverter power come directly from the local IQ Gateway. Lifetime energy and equipment inventory come from Enlighten, and Home Assistant Recorder calculates daily production from that lifetime counter.
+**Local power:** the IQ Gateway supplies the live array total and individual microinverter readings. Cloud power is a diagnostic reading with unverified array scope; it never replaces local power.
 
-The gateway's local today and seven-day counters are excluded because they can report zero during active production. This dashboard is independent of Home Assistant's global Energy configuration and does not use Enphase's paid developer API. A cloud status of **Degraded** can reflect optional endpoint families even while core solar telemetry remains available.`,
+**Cloud energy history:** the lifetime tile and daily energy charts use Enlighten's site energy counter. Home Assistant Recorder calculates daily changes from this counter. These energy charts are not calculated from the local power graph.
+
+**Separate local history:** the gateway's lifetime energy counter is shown above when available. Its total differs from the cloud counter; their starting dates and coverage have not been reconciled. Keep the histories separate. Their difference is not a measured production loss.
+
+The gateway's today and seven-day counters are excluded because they can report zero during active production. This equipment page is independent of Home Assistant's global Energy preferences and does not use Enphase's paid developer API. A cloud status of **Degraded** can reflect optional endpoints while some readings remain available.`,
         grid_options: { columns: "full" },
       },
     ],

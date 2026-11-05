@@ -2,6 +2,22 @@
 
 Status values: `implemented`, `blocked`, `deferred`, or `not applicable`.
 
+## Energy review · 2026-11-04
+
+| Feedback item | Status | Evidence |
+| --- | --- | --- |
+| I4: remove missing per-microinverter lifetime references and explain absent counters | implemented | Fresh HA discovery: 14 missing saved references become zero; all 14 power rows retained. `src/discovery.mjs`, `src/dashboard.mjs`, counter-absence test matrix in `test/core.test.mjs`; no replacement entities created |
+| I5: distinguish local array power from cloud energy history and unverified cloud power | implemented | Explicit local-power/cloud-energy labels; separate local lifetime counter in Diagnostics; source-contract tests verify every solar energy chart retains cloud history and every power graph retains local power |
+| I5: reconcile cloud API scope and cumulative-counter coverage | deferred | Observed local/cloud power and lifetime discrepancies remain unresolved; no verified equivalence, scale correction, counter splicing, or cloud fallback is claimed |
+| Whole-home native Energy ownership | not applicable | This equipment page stays independent of global Energy preferences. Parent owns whole-home source selection; README no longer claims Energy belongs only to EG4 |
+| Focused tests and read-only live preflight | implemented | `node --test test/core.test.mjs`: 11/11. Live candidate: 24 valid references, 54 cards, four views, three server-rendered Jinja summaries, zero configuration writes |
+| Native candidate visual QA | implemented | Private in-memory preview: 16 cases across all four routes at 1440×1000 and 390×844, light/dark; 40 private captures, zero native warnings/errors; report below. No dummy entities, saved HA configuration, or equipment clicks |
+| Full syntax/test release check | implemented | Parent repeated `jeremy-heavy --wait 0 -- npm run check` after refining the counter-coverage wording; all syntax checks and 11 tests passed |
+| Deployed dashboard verification | deferred | Parent owns supported deployment, exact backup/readback and post-deployment desktop/mobile verification |
+
+Private candidate evidence: `/home/jeremy/.cache/jeremy-scratch/enphase_home_assistant/energy-fixes-20261104/preflight.json` and `report.json`. Native candidate screenshots remain outside Git; manual review covered desktop Overview and mobile Energy/Diagnostics, including the explicit missing-counter explanation. Deployment remains a separate parent-owned step.
+
+
 ## Professional dashboard refinement · 2026-08-30
 
 This checklist records Jeremy's request to make the dashboard professional and useful and to move diagnostic text onto its own tab.

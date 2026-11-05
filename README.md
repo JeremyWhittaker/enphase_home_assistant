@@ -2,23 +2,24 @@
 
 A native, read-only Home Assistant dashboard for Jeremy's **2103** Enphase site (Enlighten system **5815605**). It installs as a dedicated **Enphase 2103** sidebar panel with responsive Overview, Energy, Arrays, and Diagnostics views.
 
-The project deliberately uses a validated hybrid data path:
+The page keeps two reporting paths distinct:
 
 - the official `enphase_envoy` integration supplies one-minute local aggregate production and all 14 live microinverter power readings;
-- the read-only `enphase_ev` integration identifies the exact Enlighten site and supplies its monotonic lifetime-energy counter, inventory, connectivity, and cloud health;
-- Recorder statistics derive today/recent-day energy changes from that cloud lifetime counter;
-- Home Assistant's account-global `energy-*` cards are never used, because this server's Energy configuration belongs to EG4.
+- the read-only `enphase_ev` integration identifies the exact Enlighten site and supplies a separate lifetime-energy history, inventory, connectivity, and cloud health;
+- the tiles and charts labelled **cloud energy** retain the existing Recorder history derived from that cloud lifetime counter;
+- the local lifetime counter is shown separately in Diagnostics; local and cloud totals differ, and their starting dates and coverage have not been reconciled;
+- Home Assistant's global `energy-*` cards are not embedded here: this equipment page selects its own sources independently of whole-home Energy preferences.
 
 Runtime entity IDs are not fixed in source. Discovery follows config-entry and entity-registry relationships and stable integration unique IDs, then validates every reference against live state. It fails closed if the cloud site or local gateway is missing, unloaded, or ambiguous.
 
 ## Views
 
-- **Overview** — current local power, Recorder-derived production today, one concise actionable array-health message, and separate 24-hour/seven-day trend columns.
-- **Energy** — today and lifetime production plus 30-day energy and 48-hour power trends; optional consumption, grid, and battery sections appear only when those channels become available.
+- **Overview** — current local power, production today from cloud energy history, one concise actionable array-health message, and separate 24-hour/seven-day trend columns.
+- **Energy** — cloud-derived today/lifetime energy and 30-day energy history, alongside a separate 48-hour local power trend; optional consumption, grid, and battery sections appear only when those channels become available.
 - **Arrays** — live inverter output grouped by the real Pool shade and South west arrays, with short row labels and a direct [Enlighten array view](https://enlighten.enphaseenergy.com/systems/5815605/arrays).
-- **Diagnostics** — exact fault serials, source freshness, gateway/cloud/raw fleet health, per-inverter lifetime counters, unavailable telemetry, site identity, and data-source notes.
+- **Diagnostics** — exact fault serials, source freshness, gateway/cloud/raw fleet health, available per-inverter lifetime counters, an explicit count when those counters are missing, separate local/cloud lifetime totals, unavailable telemetry, site identity, and data-source notes.
 
-The visible Arrays and Diagnostics tabs preserve the original `/microinverters` and `/system` routes so existing bookmarks continue to work. Daily-use views deliberately omit integration names, API notes, raw timestamps, serial-number lists, and optional cloud-endpoint details.
+The visible Arrays and Diagnostics tabs preserve the original `/microinverters` and `/system` routes so existing bookmarks continue to work. Daily-use labels identify local power and cloud energy. Integration details, raw timestamps, serial lists, and cloud endpoint notes stay in Diagnostics.
 
 The dashboard currently calls attention to the Pool shade microinverter if inventory continues to report it as not reporting; it does not trust the aggregate `Online` fleet label alone.
 
@@ -95,11 +96,13 @@ npm run qa:visual -- --output-dir /tmp/enphase-home-assistant-qa
 
 It authenticates through an ephemeral browser profile, renders all four routes at desktop and mobile sizes in light and dark modes, captures overlapping screenshots from top to bottom, checks the sidebar route, and fails on Lovelace/browser errors. The temporary profile is deleted on exit; reports and screenshots remain outside the repository and use private file modes.
 
-## Current deployment
+## November 2026 energy review
 
-The professional layout was deployed transactionally to Home Assistant 2026.8.3 on 2026-08-30 at `/enphase-2103/overview`. Final live preflight resolves 38 entities into 57 native cards across four views, renders three Jinja health summaries on the server, and returns `action=unchanged` after exact storage read-back. Both Enphase config entries remain loaded and all 14 local inverter entities are available.
+The November 4 live review found fourteen stale per-microinverter lifetime rows, although all fourteen local power readings remained available. Fresh discovery now omits counters that are missing, disabled, not loaded, unknown, unavailable, or nonnumeric. Diagnostics explains how many counters are missing instead of creating replacement entities or leaving broken rows.
 
-The final browser report is `/tmp/enphase-home-assistant-professional-qa.czglBE/report.json`: 16 route/theme/viewport cases and 36 overlapping screenshots passed with no actionable browser errors. Representative Overview, Energy, Arrays, and Diagnostics screens were inspected manually in desktop/mobile and light/dark modes. The only allowed frontend noise comes from a globally loaded camera-card resource and a scoped-custom-element-registry source-map request that this native dashboard does not reference. The existing Home Assistant Prometheus endpoint continues to export the aggregate, inverter, and cloud entities through its established scrape.
+The same review measured local aggregate power at 1,207 W and the fourteen local microinverters at a combined 1,206 W, while cloud power reported 312 W. Local and cloud lifetime energy also differed (approximately 11,335 and 12,098 kWh). These are dated observations, not conversion factors. Local power remains the primary series; cloud power is labelled **scope unverified** and never replaces it. Energy tiles and daily charts continue their established cloud history. The separate local lifetime counter is diagnostic here; it is not spliced into that history. Whole-home Energy can select a verified Enphase source separately without changing this page.
+
+The candidate preserves all four URLs and read-only actions. See [QA_CHECKLIST.md](QA_CHECKLIST.md) for current test and native browser evidence. Deployment and its final read-back are recorded separately; the August 30 professional layout was the prior deployed baseline.
 
 ## Safety model
 
@@ -108,7 +111,7 @@ The final browser report is `/tmp/enphase-home-assistant-professional-qa.czglBE/
 - The one external Enlighten link is ordinary read-only Markdown, not a Lovelace navigation/action control.
 - Registered-but-`unavailable` optional consumption, grid, battery, EVSE, and weather entities are omitted.
 - Required local power and cloud lifetime entities must exist in live state; unavailable readings are shown honestly, never converted to zero.
-- Local day/seven-day counters are intentionally excluded because the audited gateway reported zero while producing. The older local lifetime statistic is also excluded because its recovery catch-up jump would distort daily change.
-- Cloud lifetime Recorder history began with the original 2026-08-28 deployment and now provides complete daily bars.
+- Local day/seven-day counters remain excluded because the audited gateway reported zero while producing. Local lifetime energy appears only as a separate diagnostic counter; this page's daily changes continue to use cloud history.
+- Cloud lifetime Recorder history began with the original 2026-08-28 deployment. Missing updates can leave gaps; cloud health is shown in Diagnostics.
 
 See [docs/analysis.md](docs/analysis.md) for the audited data model and [QA_CHECKLIST.md](QA_CHECKLIST.md) for release evidence.

@@ -96,7 +96,7 @@ function fixture({ includeAllOptional = false, unavailableKeys = [], microinvert
       platform: "enphase_envoy",
       disabled_by: null,
     });
-    states.push({ entity_id: entityId, state: logicalKey === "currentProductionPower" ? "3.527" : "10791.48", attributes: { unit_of_measurement: "kW" } });
+    states.push({ entity_id: entityId, state: logicalKey === "currentProductionPower" ? "3.527" : "10791.48", attributes: { unit_of_measurement: logicalKey === "currentProductionPower" ? "kW" : "kWh" } });
   }
   for (let index = 1; index <= microinverterCount; index += 1) {
     const entityId = `sensor.renamed_local_inverter_${index}`;
@@ -439,4 +439,45 @@ test("backup is private and checksummed; restore guards drift and restores prior
   } finally {
     rmSync(dirname(created.path), { recursive: true, force: true });
   }
+});
+
+
+test("missing microinverter counters never become stale dashboard references", () => {
+  for (const absence of ["removed", "registry-only", "disabled", "unavailable", "unknown", "not-a-number"]) {
+    const data = fixture({ microinverterCount: 14 });
+    const counters = new Set(data.entities.filter((entry) => /^enphase_ev_inverter_/.test(entry.unique_id)).map((entry) => entry.entity_id));
+    if (absence === "removed") data.entities = data.entities.filter((entry) => !counters.has(entry.entity_id));
+    if (["removed", "registry-only"].includes(absence)) data.states = data.states.filter((state) => !counters.has(state.entity_id));
+    else if (absence === "disabled") data.entities.filter((entry) => counters.has(entry.entity_id)).forEach((entry) => { entry.disabled_by = "integration"; });
+    else data.states.filter((state) => counters.has(state.entity_id)).forEach((state) => { state.state = absence; });
+    const discovery = discover(data);
+    const candidate = buildDashboard(discovery);
+    const references = collectEntityReferences(candidate);
+    assert.equal(discovery.microinverters.length, 14);
+    assert.deepEqual(discovery.microinverterCounters, { available: 0, missing: 14 });
+    assert.ok(discovery.microinverters.every((inverter) => inverter.power && inverter.lifetimeEnergy === null));
+    assert.ok([...counters].every((id) => !references.has(id)));
+    assert.match(stableString(candidate.views[3]), /energy counters for \*\*0 of 14\*\*/);
+    assert.equal(validateDashboard(candidate, data.states).viewCount, 4);
+  }
+});
+
+test("source labels preserve local power and distinct cloud energy history", () => {
+  const data = fixture();
+  const discovery = discover(data);
+  const dashboard = buildDashboard(discovery);
+  const localPower = discovery.entities.currentProductionPower;
+  const cloudEnergy = discovery.entities.solarProductionEnergy;
+  const localEnergy = discovery.entities.localLifetimeEnergy;
+  assert.ok(localEnergy);
+  const statistics = [...valuesOfType(dashboard, "statistic"), ...valuesOfType(dashboard, "statistics-graph")];
+  assert.ok(statistics.every((card) => card.entity === cloudEnergy || card.entities?.every((row) => row.entity === cloudEnergy)));
+  assert.ok(valuesOfType(dashboard, "history-graph").every((card) => card.entities.every((row) => row.entity === localPower)));
+  assert.ok(!collectEntityReferences(dashboard.views.slice(0, 3)).has(localEnergy));
+  assert.ok(collectEntityReferences(dashboard.views[3]).has(localEnergy));
+  assert.match(stableString(dashboard), /Cloud power · scope unverified/);
+  assert.match(stableString(dashboard), /Their difference is not a measured production loss/);
+  assert.match(stableString(dashboard.views[1]), /Cloud lifetime energy/);
+  assert.match(stableString(dashboard.views[0]), /Local power now/);
+  assert.match(stableString(dashboard.views[0]), /Cloud today/);
 });

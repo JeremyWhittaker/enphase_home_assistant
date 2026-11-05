@@ -1,7 +1,7 @@
 const ENTITY_ID_PATTERN = /^[a-z_]+\.[a-z0-9_]+$/;
 const CLOUD_DOMAIN = "enphase_ev";
 const LOCAL_DOMAIN = "enphase_envoy";
-const UNAVAILABLE = new Set(["unavailable"]);
+const UNAVAILABLE = new Set(["unavailable", "unknown", "none", ""]);
 
 export const defaultTargetSite = Object.freeze({
   systemId: "5815605",
@@ -44,6 +44,7 @@ const CLOUD_ENTITY_SPECS = Object.freeze({
 
 const LOCAL_ENTITY_SPECS = Object.freeze({
   currentProductionPower: { uniqueIdSuffix: "production", required: true },
+  localLifetimeEnergy: { uniqueIdSuffix: "lifetime_production" },
 });
 
 function normalize(value) {
@@ -204,7 +205,7 @@ function cloudLifetimeBySerial(registry, liveStateMap, configEntryId) {
       || !enabled(entity)
       || !entity.entity_id?.startsWith("sensor.")) continue;
     const state = liveStateMap.get(entity.entity_id);
-    if (!state || UNAVAILABLE.has(normalize(state.state))) continue;
+    if (!state || UNAVAILABLE.has(normalize(state.state)) || !Number.isFinite(Number(state.state))) continue;
     if (result.has(match[1])) throw new Error(`Ambiguous cloud lifetime energy for microinverter ${match[1]}`);
     result.set(match[1], validEntityId(entity.entity_id, "microinverter lifetime energy"));
   }
@@ -359,6 +360,10 @@ export function discoverEnphase({ configEntries, devices, entities, states, targ
     }),
     entities: Object.freeze(entityMap),
     microinverters: Object.freeze(microinverters),
+    microinverterCounters: Object.freeze({
+      available: microinverters.filter((record) => record.lifetimeEnergy).length,
+      missing: microinverters.filter((record) => !record.lifetimeEnergy).length,
+    }),
     capabilities,
   });
 }
